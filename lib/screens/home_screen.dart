@@ -18,19 +18,34 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   /// The random number generator used to select a random emoji.
   final Random _random = Random();
 
   /// The emoji that is currently displayed.
   late Emoji _currentEmoji;
 
+  /// Animation controller for the emoji.
+  late AnimationController _controller;
+
   @override
   void initState() {
     super.initState();
 
+    // Initialize the animation controller.
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
     // Randomize the emoji when the screen is first displayed.
     _randomizeEmoji();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   /// Randomizes the emoji that is currently displayed.
@@ -39,13 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentEmoji = emojiList[index];
     });
+    _controller.forward(from: 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Screen'),
+        title: const Text('Random Emoji Generator'),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
       ),
       body: Center(
         child: Padding(
@@ -53,22 +71,50 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                _currentEmoji.emoji,
-                style: TextStyle(fontSize: 128),
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.shade50,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: const Text(
+                  'This app will randomly generate any emoji. Challenge your friends and see if they guess it by asking a maximum of 5 yes/no questions.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.deepPurple,
+                  ),
+                ),
               ),
+              const SizedBox(height: 16),
+              ScaleTransition(
+                scale: CurvedAnimation(
+                  parent: _controller,
+                  curve: Curves.elasticOut,
+                ),
+                child: Text(
+                  _currentEmoji.emoji,
+                  style: const TextStyle(fontSize: 128),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 _currentEmoji.name,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 24),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.large(
+      floatingActionButton: FloatingActionButton(
         onPressed: _randomizeEmoji,
         tooltip: 'Randomize Emoji',
+        backgroundColor: Colors.deepPurple,
         child: const Icon(Icons.shuffle),
       ),
     );
